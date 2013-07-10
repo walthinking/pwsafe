@@ -1114,6 +1114,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AES.cpp" />
     <ClCompile Include="BlowFish.cpp" />
     <ClCompile Include="CheckVersion.cpp" />
     <ClCompile Include="Command.cpp" />
@@ -1165,6 +1166,7 @@
     <ClCompile Include="XML\XERCES\XSecMemMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AES.h" />
     <ClInclude Include="BlowFish.h" />
     <ClInclude Include="CheckVersion.h" />
     <ClInclude Include="Command.h" />
