@@ -1125,6 +1125,7 @@
     <ClCompile Include="hmac.cpp" />
     <ClCompile Include="ItemData.cpp" />
     <ClCompile Include="ItemField.cpp" />
+    <ClCompile Include="KeyWrap.cpp" />
     <ClCompile Include="Match.cpp" />
     <ClCompile Include="pugixml\pugixml.cpp" />
     <ClCompile Include="PWSLog.cpp" />
@@ -1180,6 +1181,7 @@
     <ClInclude Include="hmac.h" />
     <ClInclude Include="ItemData.h" />
     <ClInclude Include="ItemField.h" />
+    <ClInclude Include="KeyWrap.h" />
     <ClInclude Include="Match.h" />
     <ClInclude Include="pugixml\pugiconfig.hpp" />
     <ClInclude Include="pugixml\pugixml.hpp" />
