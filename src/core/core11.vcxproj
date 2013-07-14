@@ -1124,6 +1124,7 @@
     <ClCompile Include="ItemData.cpp" />
     <ClCompile Include="ItemField.cpp" />
     <ClCompile Include="Match.cpp" />
+    <ClCompile Include="pbkdf2.cpp" />
     <ClCompile Include="pugixml\pugixml.cpp" />
     <ClCompile Include="PWSLog.cpp" />
     <ClCompile Include="XML\MSXML\MFileSAX2Handlers.cpp" />
@@ -1178,6 +1179,7 @@
     <ClInclude Include="ItemData.h" />
     <ClInclude Include="ItemField.h" />
     <ClInclude Include="Match.h" />
+    <ClInclude Include="pbkdf2.h" />
     <ClInclude Include="pugixml\pugiconfig.hpp" />
     <ClInclude Include="pugixml\pugixml.hpp" />
     <ClInclude Include="PWSLog.h" />
