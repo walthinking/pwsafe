@@ -155,6 +155,9 @@
     <ClCompile Include="pugixml\pugixml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pbkdf2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BlowFish.h">
@@ -332,6 +335,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pugixml\pugixml.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
