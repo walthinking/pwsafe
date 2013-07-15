@@ -18,6 +18,7 @@ using namespace std;
 #define TEST_TWOFISH
 #define TEST_SHA256
 #define TEST_HMAC_SHA256
+#define TEST_PBKDF2_SHA1
 #define TEST_STRINGX
 #define TEST_ITEMFIELD
 
@@ -32,6 +33,9 @@ using namespace std;
 #endif
 #ifdef TEST_HMAC_SHA256
 #include "HMAC_SHA256Test.h"
+#endif
+#ifdef TEST_PBKDF2_SHA1
+#include "PBKDF2SHA1Test.h"
 #endif
 #ifdef TEST_STRINGX
 #include "StringXTest.h"
@@ -75,17 +79,23 @@ int main()
   t4.run();
   t4.report();
 #endif
-#ifdef TEST_STRINGX
-  StringXTest t5;
+#ifdef TEST_PBKDF2_SHA1
+  CPBKDF2_SHA1Test t5;
   t5.setStream(&cout);
   t5.run();
   t5.report();
 #endif
-#ifdef TEST_ITEMFIELD
-  ItemFieldTest t6;
+#ifdef TEST_STRINGX
+  StringXTest t6;
   t6.setStream(&cout);
   t6.run();
   t6.report();
+#endif
+#ifdef TEST_ITEMFIELD
+  ItemFieldTest t7;
+  t7.setStream(&cout);
+  t7.run();
+  t7.report();
 #endif
   return 0;
 }
