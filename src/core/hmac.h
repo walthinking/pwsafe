@@ -16,11 +16,32 @@
 
 #include "Util.h" // for ASSERT
 
-template<class H, int HASHLEN, int BLOCKSIZE>
-class HMAC
+class HMAC_BASE
 {
 public:
-  HMAC(const unsigned char *key, unsigned long keylen)
+  HMAC_BASE() {}
+  virtual ~HMAC_BASE() {}
+
+  virtual int GetBlockSize() const = 0;
+  virtual int GetHashLen() const = 0;
+
+  virtual void Init(const unsigned char *key, unsigned long keylen) = 0;
+  virtual void Update(const unsigned char *in, unsigned long inlen) = 0;
+  virtual void Final(unsigned char digest[]) = 0;
+
+  void Doit(const unsigned char *key, unsigned long keylen,
+            const unsigned char *in, unsigned long inlen,
+            unsigned char digest[])
+  {Init(key, keylen); Update(in, inlen); Final(digest);}
+
+
+};
+
+template<class H, int HASHLEN, int BLOCKSIZE>
+class HMAC : public HMAC_BASE
+{
+public:
+  HMAC(const unsigned char *key, unsigned long keylen) : HMAC_BASE()
   {
     ASSERT(key != NULL);
     
@@ -28,7 +49,7 @@ public:
     Init(key, keylen);
   }
 
-  HMAC()
+  HMAC() : HMAC_BASE()
   { // Init needs to be called separately
     memset(K, 0, sizeof(K));
   }
@@ -81,11 +102,6 @@ public:
     memset(d, 0, HASHLEN);
     H1.Final(digest);
   }
-
-  void Doit(const unsigned char *key, unsigned long keylen,
-            const unsigned char *in, unsigned long inlen,
-            unsigned char digest[HASHLEN])
-  {Init(key, keylen); Update(in, inlen); Final(digest);}
 
 private:
   H Hash;
