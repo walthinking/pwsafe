@@ -264,6 +264,7 @@
   <ItemGroup>
     <ClInclude Include="BlowFishTest.h" />
     <ClInclude Include="HMAC_SHA256Test.h" />
+    <ClInclude Include="PBKDF2SHA1Test.h" />
     <ClInclude Include="SHA256Test.h" />
     <ClInclude Include="StringXTest.h" />
     <ClInclude Include="test.h" />
