@@ -15,6 +15,7 @@
 
 #include "PwsPlatform.h"
 #include "hmac.h"
+
 #include <cstring>
 
 /**
@@ -57,6 +58,8 @@ void pbkdf2(const unsigned char *password, unsigned long password_len,
   left   = *outlen;
   blkno  = 1;
   stored = 0;
+  x = hmac->GetHashLen();
+
   while (left != 0) {
     /* process block number blkno */
     memset(buf[0], 0, BlockSize * 2);
@@ -72,7 +75,6 @@ void pbkdf2(const unsigned char *password, unsigned long password_len,
     hmac->Final(buf[0]);
 
     /* now compute repeated and XOR it in buf[1] */
-    x = hmac->GetHashLen();
     memcpy(buf[1], buf[0], x);
     for (itts = 1; itts < iteration_count; ++itts) {
       hmac->Doit(password, password_len, buf[0], x, buf[0]);

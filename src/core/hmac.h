@@ -41,7 +41,8 @@ template<class H, int HASHLEN, int BLOCKSIZE>
 class HMAC : public HMAC_BASE
 {
 public:
-  HMAC(const unsigned char *key, unsigned long keylen) : HMAC_BASE()
+  HMAC(const unsigned char *key, unsigned long keylen)
+    : HMAC_BASE(), Hash(0)
   {
     ASSERT(key != NULL);
     
@@ -49,12 +50,12 @@ public:
     Init(key, keylen);
   }
 
-  HMAC() : HMAC_BASE()
+  HMAC() : HMAC_BASE(), Hash(0)
   { // Init needs to be called separately
     memset(K, 0, sizeof(K));
   }
 
-  ~HMAC(){/* cleaned up in Final */}
+  ~HMAC(){delete Hash;}
 
   int GetBlockSize() const {return BLOCKSIZE;}
   int GetHashLen() const {return HASHLEN;}
@@ -62,6 +63,8 @@ public:
   void Init(const unsigned char *key, unsigned long keylen)
   {
     ASSERT(key != NULL);
+    ASSERT(Hash == NULL);
+    Hash = new H; // to ensure state's cleared.
 
     if (keylen > BLOCKSIZE) {
       H H0;
@@ -75,20 +78,24 @@ public:
     unsigned char k_ipad[BLOCKSIZE];
     for (int i = 0; i < BLOCKSIZE; i++)
       k_ipad[i] = K[i] ^ 0x36;
-    Hash.Update(k_ipad, BLOCKSIZE);
+    Hash->Update(k_ipad, BLOCKSIZE);
     memset(k_ipad, 0, BLOCKSIZE);
   }
 
   void Update(const unsigned char *in, unsigned long inlen)
   {
-    Hash.Update(in, inlen);
+    ASSERT(Hash != NULL);
+    Hash->Update(in, inlen);
   }
 
   void Final(unsigned char digest[HASHLEN])
   {
     unsigned char d[HASHLEN];
+    ASSERT(Hash != NULL);
 
-    Hash.Final(d);
+    Hash->Final(d);
+    delete(Hash);
+    Hash = NULL;
     unsigned char k_opad[BLOCKSIZE];
     for (int i = 0; i < BLOCKSIZE; i++)
       k_opad[i] = K[i] ^ 0x5c;
@@ -104,7 +111,7 @@ public:
   }
 
 private:
-  H Hash;
+  H *Hash;
   unsigned char K[BLOCKSIZE];
 };
 
