@@ -26,7 +26,7 @@ LIBSRC          = BlowFish.cpp CheckVersion.cpp \
                   TwoFish.cpp UnknownField.cpp  \
                   UTF8Conv.cpp Util.cpp CoreOtherDB.cpp \
                   VerifyFormat.cpp XMLprefs.cpp \
-                  ExpiredList.cpp \
+                  pbkdf2.cpp ExpiredList.cpp \
                   pugixml/pugixml.cpp \
                   XML/XMLFileHandlers.cpp XML/XMLFileValidation.cpp \
                   XML/Xerces/XFileSAX2Handlers.cpp XML/Xerces/XFileValidator.cpp \
