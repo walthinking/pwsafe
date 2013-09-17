@@ -51,6 +51,9 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pwsafe_base</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release64|x64'">pwsafe_base</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;languageDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>

@@ -89,6 +89,9 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pws_osk</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release64|x64'">pws_osk</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
       <Message>Pre-build event command script</Message>
