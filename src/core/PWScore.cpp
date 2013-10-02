@@ -433,8 +433,8 @@ private:
   PWScore *m_pcore;
 };
 
-int PWScore::WriteFile(const StringX &filename, const bool bUpdateSig,
-                       PWSfile::VERSION version)
+int PWScore::WriteFile(const StringX &filename, PWSfile::VERSION version,
+                       bool bUpdateSig)
 {
   PWS_LOGIT_ARGS("bUpdateSig=%s", bUpdateSig ? _T("true") : _T("false"));
 
