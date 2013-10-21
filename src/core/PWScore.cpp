@@ -827,7 +827,7 @@ int PWScore::ReadFile(const StringX &a_filename, const StringX &a_passkey,
 
   m_nRecordsWithUnknownFields = in->GetNumRecordsWithUnknownFields();
   in->GetUnknownHeaderFields(m_UHFL);
-  int closeStatus = in->Close(); // in V3 this checks integrity
+  int closeStatus = in->Close(); // in V3 & later this checks integrity
 #ifdef DEMO
   if (closeStatus == PWSfile::SUCCESS && limited)
     closeStatus = LIMIT_REACHED; // if integrity OK but LIMIT_REACHED, return latter
