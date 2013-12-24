@@ -20,7 +20,10 @@
 #include <wx/wx.h>
 #endif
 
+#include <wx/dynarray.h>
+
 #include "./SelectionCriteria.h"
+#include "./wxutils.h"
 
 CItemData::FieldType subgroups[] = {  CItemData::GROUP,
                                       CItemData::GROUPTITLE,
@@ -34,14 +37,35 @@ struct _subgroupFunctions {
   const charT* name;
   PWSMatch::MatchRule function;
 
-} subgroupFunctions[] = {                         {_("equals"),              PWSMatch::MR_EQUALS},
-                                                  {_("does not equal"),      PWSMatch::MR_NOTEQUAL},
-                                                  {_("begins with"),         PWSMatch::MR_BEGINS},
-                                                  {_("does not begin with"), PWSMatch::MR_NOTBEGIN},
-                                                  {_("ends with"),           PWSMatch::MR_ENDS},
-                                                  {_("does not end with"),   PWSMatch::MR_NOTEND},
-                                                  {_("contains"),            PWSMatch::MR_CONTAINS},
-                                                  {_("does not contain"),    PWSMatch::MR_NOTCONTAIN} } ;
+};
+
+WX_DECLARE_OBJARRAY(_subgroupFunctions, SubgroupFunctionArray);
+
+SubgroupFunctionArray CreateSubgroupFunctionArray();
+
+const SubgroupFunctionArray& GetSubgroupFunctions()
+{
+  static SubgroupFunctionArray sfa = CreateSubgroupFunctionArray();
+  return sfa;
+}
+
+SubgroupFunctionArray CreateSubgroupFunctionArray()
+{
+  _subgroupFunctions subgroupFunctions[] = {        {_("equals"),              PWSMatch::MR_EQUALS},
+                                                    {_("does not equal"),      PWSMatch::MR_NOTEQUAL},
+                                                    {_("begins with"),         PWSMatch::MR_BEGINS},
+                                                    {_("does not begin with"), PWSMatch::MR_NOTBEGIN},
+                                                    {_("ends with"),           PWSMatch::MR_ENDS},
+                                                    {_("does not end with"),   PWSMatch::MR_NOTEND},
+                                                    {_("contains"),            PWSMatch::MR_CONTAINS},
+                                                    {_("does not contain"),    PWSMatch::MR_NOTCONTAIN} } ;
+  
+  SubgroupFunctionArray sfa;
+  for (size_t idx = 0; idx < WXSIZEOF(subgroupFunctions); ++idx)
+    sfa.Add(subgroupFunctions[idx]);
+  
+  return sfa;
+}
 
 CItemData::FieldType selectableFields[] = { CItemData::GROUP,
                                             CItemData::TITLE,
@@ -102,27 +126,27 @@ wxString SelectionCriteria::GetGroupSelectionDescription() const
     return _("All entries");
   else
     return wxString(_("Entries whose ")) << GetSelectableFieldName(subgroups[m_subgroupObject]) << wxT(' ')
-            << subgroupFunctions[m_subgroupFunction].name << wxT(" \"") << m_subgroupText
+            << GetSubgroupFunctions()[m_subgroupFunction].name << wxT(" \"") << m_subgroupText
             << wxT("\" [") << (m_fCaseSensitive? wxT("") : _("not ")) << _("case-sensitive]");
 }
 
 //static
 size_t SelectionCriteria::GetNumSubgroupFunctions()
 {
-  return WXSIZEOF(subgroupFunctions);
+  return GetSubgroupFunctions().GetCount();
 }
 
 //static
 wxString SelectionCriteria::GetSubgroupFunctionName(size_t idx)
 {
   wxASSERT_MSG(idx < GetNumSubgroupFunctions(), wxT("Invalid index for GetSubgroupFunctionName"));
-  return subgroupFunctions[idx].name;
+  return GetSubgroupFunctions()[idx].name;
 }
 //static
 PWSMatch::MatchRule SelectionCriteria::GetSubgroupFunction(size_t idx)
 {
   wxASSERT_MSG(idx < GetNumSubgroupFunctions(), wxT("Invalid index for GetSubgroupFunction"));
-  return subgroupFunctions[idx].function;
+  return GetSubgroupFunctions()[idx].function;
 }
 
 //returns true if all fields have been selected
@@ -137,3 +161,5 @@ bool SelectionCriteria::GetFieldSelection(wxArrayString& selectedFields, wxArray
   return m_bsFields.count() == NumberOf(selectableFields);
 }
 
+#include <wx/arrimpl.cpp>
+WX_DEFINE_OBJARRAY(SubgroupFunctionArray);

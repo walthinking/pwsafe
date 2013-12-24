@@ -524,9 +524,10 @@ void PasswordSafeFrame::RefreshToolbarButtons()
   wxToolBar* tb = GetToolBar();
   wxASSERT(tb);
 
+  PwsToolbarInfoArray PwsToolbarButtons = GetPwsToolbarbuttons();
   if (tb->GetToolsCount() == 0) {  //being created?
     if (PWSprefs::GetInstance()->GetPref(PWSprefs::UseNewToolbar)) {
-      for (size_t idx = 0; idx < NumberOf(PwsToolbarButtons); ++idx) {
+      for (size_t idx = 0; idx < PwsToolbarButtons.GetCount(); ++idx) {
         if (PwsToolbarButtons[idx].id == ID_SEPARATOR)
           tb->AddSeparator();
         else
@@ -536,7 +537,7 @@ void PasswordSafeFrame::RefreshToolbarButtons()
       }
     }
     else {
-      for (size_t idx = 0; idx < NumberOf(PwsToolbarButtons); ++idx) {
+      for (size_t idx = 0; idx < PwsToolbarButtons.GetCount(); ++idx) {
         if (PwsToolbarButtons[idx].id == ID_SEPARATOR)
           tb->AddSeparator();
         else
@@ -547,7 +548,7 @@ void PasswordSafeFrame::RefreshToolbarButtons()
   }
   else { //toolbar type was changed from the menu
     if (PWSprefs::GetInstance()->GetPref(PWSprefs::UseNewToolbar)) {
-      for (size_t idx = 0; idx < NumberOf(PwsToolbarButtons); ++idx) {
+      for (size_t idx = 0; idx < PwsToolbarButtons.GetCount(); ++idx) {
         if (PwsToolbarButtons[idx].id == ID_SEPARATOR)
           continue;
         tb->SetToolNormalBitmap(PwsToolbarButtons[idx].id, wxBitmap(PwsToolbarButtons[idx].bitmap_normal));
@@ -555,7 +556,7 @@ void PasswordSafeFrame::RefreshToolbarButtons()
       }
     }
     else {
-      for (size_t idx = 0; idx < NumberOf(PwsToolbarButtons); ++idx) {
+      for (size_t idx = 0; idx < PwsToolbarButtons.GetCount(); ++idx) {
         if (PwsToolbarButtons[idx].id == ID_SEPARATOR)
           continue;
         tb->SetToolNormalBitmap(PwsToolbarButtons[idx].id, wxBitmap(PwsToolbarButtons[idx].bitmap_classic));

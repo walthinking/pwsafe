@@ -113,6 +113,10 @@
 		E691FB58140D551F00925F96 /* fieldselectionpanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E691FB55140D551E00925F96 /* fieldselectionpanel.cpp */; };
 		E691FB59140D551F00925F96 /* fieldselectionpanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E691FB55140D551E00925F96 /* fieldselectionpanel.cpp */; };
 		E691FB5A140D551F00925F96 /* fieldselectionpanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E691FB55140D551E00925F96 /* fieldselectionpanel.cpp */; };
+		E69434DB185CEA2700D9F586 /* PwsToolbarButtons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E69434DA185CEA2700D9F586 /* PwsToolbarButtons.cpp */; };
+		E69434DC185CEA2700D9F586 /* PwsToolbarButtons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E69434DA185CEA2700D9F586 /* PwsToolbarButtons.cpp */; };
+		E69434DD185CEA2700D9F586 /* PwsToolbarButtons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E69434DA185CEA2700D9F586 /* PwsToolbarButtons.cpp */; };
+		E69434DE185CEA2700D9F586 /* PwsToolbarButtons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E69434DA185CEA2700D9F586 /* PwsToolbarButtons.cpp */; };
 		E698273E14C01ABC0043C243 /* logit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E698273D14C01ABC0043C243 /* logit.cpp */; };
 		E698273F14C01ABC0043C243 /* logit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E698273D14C01ABC0043C243 /* logit.cpp */; };
 		E698274014C01ABC0043C243 /* logit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E698273D14C01ABC0043C243 /* logit.cpp */; };
@@ -561,6 +565,7 @@
 		E6919C631298FB25001F96D9 /* pwsafe.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = pwsafe.icns; path = ../src/ui/wxWidgets/graphics/pwsafe.icns; sourceTree = SOURCE_ROOT; };
 		E691FB55140D551E00925F96 /* fieldselectionpanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fieldselectionpanel.cpp; sourceTree = "<group>"; };
 		E691FB56140D551F00925F96 /* fieldselectionpanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fieldselectionpanel.h; sourceTree = "<group>"; };
+		E69434DA185CEA2700D9F586 /* PwsToolbarButtons.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PwsToolbarButtons.cpp; sourceTree = "<group>"; };
 		E698273C14C01ABC0043C243 /* logit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = logit.h; sourceTree = "<group>"; };
 		E698273D14C01ABC0043C243 /* logit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = logit.cpp; path = mac/logit.cpp; sourceTree = "<group>"; };
 		E698275814C01B7D0043C243 /* PWSLog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PWSLog.cpp; sourceTree = "<group>"; };
@@ -1433,6 +1438,7 @@
 		E6ADB9A411957099004E2BE5 /* wxWidgets */ = {
 			isa = PBXGroup;
 			children = (
+				E69434DA185CEA2700D9F586 /* PwsToolbarButtons.cpp */,
 				E66C16B916731F9400C996B1 /* PasswordPolicy.cpp */,
 				E66C16BA16731F9400C996B1 /* PasswordPolicy.h */,
 				E66C16B116731EFE00C996B1 /* ManagePwdPolicies.cpp */,
@@ -2176,6 +2182,7 @@
 				E66C16AC16731ECD00C996B1 /* mainManage.cpp in Sources */,
 				E66C16B416731EFE00C996B1 /* ManagePwdPolicies.cpp in Sources */,
 				E66C16BC16731F9400C996B1 /* PasswordPolicy.cpp in Sources */,
+				E69434DD185CEA2700D9F586 /* PwsToolbarButtons.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2304,6 +2311,7 @@
 				E66C16AB16731ECD00C996B1 /* mainManage.cpp in Sources */,
 				E66C16B316731EFE00C996B1 /* ManagePwdPolicies.cpp in Sources */,
 				E66C16BB16731F9400C996B1 /* PasswordPolicy.cpp in Sources */,
+				E69434DB185CEA2700D9F586 /* PwsToolbarButtons.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2358,6 +2366,7 @@
 				E66C16AE16731ECD00C996B1 /* mainManage.cpp in Sources */,
 				E66C16B616731EFE00C996B1 /* ManagePwdPolicies.cpp in Sources */,
 				E66C16BE16731F9400C996B1 /* PasswordPolicy.cpp in Sources */,
+				E69434DE185CEA2700D9F586 /* PwsToolbarButtons.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2560,6 +2569,7 @@
 				E66C16AD16731ECD00C996B1 /* mainManage.cpp in Sources */,
 				E66C16B516731EFE00C996B1 /* ManagePwdPolicies.cpp in Sources */,
 				E66C16BD16731F9400C996B1 /* PasswordPolicy.cpp in Sources */,
+				E69434DC185CEA2700D9F586 /* PwsToolbarButtons.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

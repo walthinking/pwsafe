@@ -98,27 +98,36 @@ EVT_BUTTON( wxID_OK, COptions::OnOk )
   EVT_SPINCTRL(ID_SPINCTRL8, COptions::OnAtLeastChars)
 END_EVENT_TABLE()
 
-const wxChar *BUSuffix[] = {
-  _("None"),
-  _("YYYYMMMDD_HHMMSS"),
-  _("Incremented Number [001-999]"),
-};
-
 enum {NO_SFX, TS_SFX, INC_SFX}; // For backup file suffix name
 
-// Following in enum order (see PWSprefs.h)
-const wxChar *DCAStrings[] = {
-  _("Copy password to clipboard"),
-  _("Edit/View selected entry"),
-  _("Autotype"),
-  _("Browse to URL"),
-  _("Copy notes to clipboard"),
-  _("Copy username to clipboard"),
-  _("Copy password to clipboard, minimize"),
-  _("Browse to URL + Autotype"),
-  _("Run Command"),
-  _("Send email"),
-};
+wxArrayString CreateDCAStringList();
+const wxArrayString& GetDCAStrings() {
+  static wxArrayString dcaStrings = CreateDCAStringList();
+  return dcaStrings;
+}
+
+wxArrayString CreateDCAStringList()
+{
+  // Following in enum order (see PWSprefs.h)
+  const wxChar *DCAStrings[] = {
+    _("Copy password to clipboard"),
+    _("Edit/View selected entry"),
+    _("Autotype"),
+    _("Browse to URL"),
+    _("Copy notes to clipboard"),
+    _("Copy username to clipboard"),
+    _("Copy password to clipboard, minimize"),
+    _("Browse to URL + Autotype"),
+    _("Run Command"),
+    _("Send email"),
+  };
+  
+  wxArrayString l;
+  for (size_t idx = 0; idx < WXSIZEOF(DCAStrings); ++idx)
+    l.Add(DCAStrings[idx]);
+  
+  return l;
+}
 
 /*!
  * COptions constructors
@@ -870,15 +879,16 @@ void COptions::PrefsToPropSheet()
   m_maintaindatetimestamps = prefs->GetPref(PWSprefs::MaintainDateTimeStamps);
   m_escexits = prefs->GetPref(PWSprefs::EscExits);
   m_doubleclickaction = prefs->GetPref(PWSprefs::DoubleClickAction);
+  const wxArrayString& DCAStrings = GetDCAStrings();
   if (m_doubleclickaction < 0 ||
-      m_doubleclickaction >= int(sizeof(DCAStrings)/sizeof(DCAStrings[0])))
+      m_doubleclickaction >= int(DCAStrings.GetCount()))
     m_doubleclickaction = 0;
-  m_DCACB->SetValue(DCAStrings[m_doubleclickaction]);
+  m_DCACB->SetValue(DCAStrings.Item(m_doubleclickaction));
   m_shiftdoubleclickaction = prefs->GetPref(PWSprefs::ShiftDoubleClickAction);
   if (m_shiftdoubleclickaction < 0 ||
-      m_shiftdoubleclickaction >= int(sizeof(DCAStrings)/sizeof(DCAStrings[0])))
+      m_shiftdoubleclickaction >= int(DCAStrings.GetCount()))
     m_shiftdoubleclickaction = 0;
-  m_SDCACB->SetValue(DCAStrings[m_shiftdoubleclickaction]);
+  m_SDCACB->SetValue(DCAStrings.Item(m_shiftdoubleclickaction));
   m_minauto = prefs->GetPref(PWSprefs::MinimizeOnAutotype);
   m_autotypeStr = prefs->GetPref(PWSprefs::DefaultAutotypeString).c_str();
   if (m_autotypeStr.empty())
@@ -941,12 +951,10 @@ void COptions::PrefsToPropSheet()
 
 static int DCAStr2Int(const wxString &str)
 {
-  for (int i = 0; i < int(sizeof(DCAStrings)/sizeof(DCAStrings[0])); ++i)
-    if (str == DCAStrings[i]) {
-      return i;
-    }
-  ASSERT(0);
-  return -1;
+  const wxArrayString& dcaList = GetDCAStrings();
+  int idx = dcaList.Index(str);
+  wxASSERT(idx != wxNOT_FOUND);
+  return idx;
 }
 
 void COptions::PropSheetToPrefs()
