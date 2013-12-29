@@ -10,8 +10,8 @@
 ################################################################################
 
 CONFIG?=unicodedebug
-
-WX_CONFIG?=/usr/bin/wx-config
+WX_DIR := $(HOME)/src/wxWidgets-3.0.0
+WX_CONFIG?=$(WX_DIR)/wx-config
 
 ifndef NO_YUBI
 YUBI_SRC=yubicfg.cpp YubiMixin.cpp
@@ -25,8 +25,8 @@ endif
 # debug
 ifeq ($(CONFIG),debug)
 #Override - debug isn't standard
-WXWIN=/usr/src/wxwidgets2.8-2.8.7.1
-WX_CONFIG=$(WXWIN)/GCCBuildDebugGTK2/wx-config
+WXWIN=$(WX_DIR)
+#WX_CONFIG=$(WXWIN)/GCCBuildDebugGTK2/wx-config
 TOOLCHAINNAME=gtk2d
 WXVERSION:=$(shell echo `$(WX_CONFIG) --version`)
 CXX=g++
@@ -54,7 +54,7 @@ MACPACKAGEINFO=
 # release
 else
 ifeq ($(CONFIG),release)
-WXWIN=/usr/src/wxwidgets2.8-2.8.7.1
+WXWIN=$(WX_DIR)
 TOOLCHAINNAME=gtk2
 WXVERSION:=$(shell echo `$(WX_CONFIG) --debug=no --unicode=no --version`)
 CXX=g++
@@ -82,7 +82,7 @@ MACPACKAGEINFO=
 # unicodedebug
 else
 ifeq ($(CONFIG),unicodedebug)
-WXWIN=/usr/src/wxwidgets2.8-2.8.7.1
+WXWIN=$(WX_DIR)
 TOOLCHAINNAME=gtk2ud
 WXVERSION:=$(shell echo `$(WX_CONFIG) --debug=yes --unicode=yes --version`)
 CXX=g++
@@ -111,7 +111,7 @@ MACPACKAGEINFO=
 
 # unicoderelease
 else
-WXWIN=/usr/src/wxwidgets2.8-2.8.7.1
+WXWIN=$(WX_DIR)
 TOOLCHAINNAME=gtk2u
 WXVERSION:=$(shell echo `$(WX_CONFIG) --debug=no --unicode=yes --version`)
 CXX=g++

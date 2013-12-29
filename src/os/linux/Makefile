@@ -7,7 +7,8 @@
 CONFIG=unicodedebug
 #CONFIG=unicoderelease
 
-WX_CONFIG?=/usr/bin/wx-config
+WX_DIR := $(HOME)/src/wxWidgets-3.0.0
+WX_CONFIG?=$(WX_DIR)/wx-config
 CPPINC=`$(WX_CONFIG) --debug=no --unicode=yes --inplace --cxxflags`
 
 DEPDIR= ./deps
