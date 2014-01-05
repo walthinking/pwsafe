@@ -38,7 +38,7 @@
 #define _tcsclen(s) wcslen(s)
 #define _tcscmp(s1, s2) wcscmp(s1, s2)
 #define _tcsncmp(s1, s2, n) wcsncmp(s1, s2, n)
-#define _tcschr(s, c) wcschr(s, c)
+#define _tcschr(s, c) ::wcschr(s, c)
 #define _tcsftime wcsftime
 #define _tasctime_s(s, N, st) pws_os::asctime(s, N, st)
 #define _vsctprintf(fmt, args) vswprintf(NULL, 0, fmt, args)

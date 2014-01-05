@@ -34,7 +34,7 @@ inline wxString towxstring(const stringT& str) {
 }
 
 inline stringT tostdstring(const wxString& str) {
-#if wxCHECK_VERSION(2,9,1)
+#if wxCHECK_VERSION(2,9,1) && wxUSE_STD_STRING
   return str.ToStdWstring();
 #else
   return stringT(str.data(), str.size());
