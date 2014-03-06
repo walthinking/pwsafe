@@ -36,6 +36,10 @@ xerces-c-devel
 wxGTK-devel
 make
 
+Experimental (for now) support for wxWidgets 3.0:
+Install deb/rpm packages as descibed in
+http://codelite.org/LiteEditor/WxWidgets30Binaries
+
 To compile without Yubikey support, set the NO_YUBI flag
 for make, e.g.,
 $ NO_YUBI=1 make
