@@ -28,6 +28,7 @@ zip
 For Fedora:
 gcc-c++
 git
+gtest-devel
 libXt-devel
 libXtst-devel
 libuuid-devel
