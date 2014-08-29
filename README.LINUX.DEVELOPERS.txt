@@ -12,6 +12,7 @@ fakeroot
 g++
 gettext
 make (version 3.81 or newer.  Makefiles are not compatible with lower versions)
+libgtest-dev
 libuuid1
 libwxgtk2.8-dev
 libwxgtk2.8-dbg
