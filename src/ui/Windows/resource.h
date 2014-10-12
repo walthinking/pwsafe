@@ -364,6 +364,8 @@
 #define IDB_YUBI_LOGO                   525
 #define IDB_YUBI_LOGO_DIS               526
 #define IDD_YUBIKEY                     527
+#define IDD_ADDEDIT_ATT                 528
+#define IDD_ADDEDIT_ATT_SHORT           529
 #define IDC_APPVERSION                  1000
 #define IDC_VERSION                     1001
 #define IDC_APPVERSION2                 1002
@@ -747,7 +749,7 @@
 #define IDC_YUBI_SN                     1465
 #define IDC_YUBI_SK                     1466
 #define IDC_YUBI_GEN_BN                 1467
-#define IDC_BUTTON2                     1468
+#define IDC_ATT_REMOVE                  1468
 #define IDC_YUBI_API                    1469
 #define IDC_RESET_SYMBOLS               1470
 #define IDC_YUBI_SHOW_HIDE              1471
@@ -781,14 +783,18 @@
 #define IDC_DB_DEF_AUTOTYPE_DELAY       1500
 #define IDC_DB_DEF_AUTOTYPE_TEXT        1501
 #define IDC_DADSPIN                     1502
+#define IDC_ATT_IMAGE                   1503
+#define IDC_ATT_NAME                    1504
+#define IDC_ATT_FILE                    1505
+#define IDC_ATT_ADD                     1506
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        528
+#define _APS_NEXT_RESOURCE_VALUE        529
 #define _APS_NEXT_COMMAND_VALUE         30001
-#define _APS_NEXT_CONTROL_VALUE         1503
+#define _APS_NEXT_CONTROL_VALUE         1507
 #define _APS_NEXT_SYMED_VALUE           528
 #endif
 #endif
