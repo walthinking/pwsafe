@@ -260,9 +260,6 @@ public:
   /// wxEVT_COMMAND_MENU_SELECTED event handler for ID_LANGUAGEMENU
   void OnLanguageClick( wxCommandEvent& evt);
 
-  /// wxEVT_COMMAND_MENU_SELECTED event handler for wxID_ABOUT
-  void OnAboutClick( wxCommandEvent& evt);
-
 #ifndef NO_YUBI
   /// wxEVT_COMMAND_MENU_SELECTED event handler for ID_YUBIKEY_MNG
   void OnYubikeyMngClick( wxCommandEvent& event );
