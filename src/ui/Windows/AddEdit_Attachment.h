@@ -12,6 +12,8 @@
 
 #include "AddEdit_PropertyPage.h"
 #include "resource.h"
+#include "afxwin.h"
+#include "atlimage.h" // for CImage
 
 class CAddEdit_Attachment : public CAddEdit_PropertyPage
 {
@@ -40,6 +42,7 @@ protected:
   virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
   virtual BOOL OnApply();
   virtual BOOL OnKillActive();
+	afx_msg void OnPaint();
   //}}AFX_VIRTUAL
 
   // Generated message map functions
@@ -52,9 +55,15 @@ protected:
   DECLARE_MESSAGE_MAP()
 
 private:
-  void SetXTime();
-  void UpdateTimes();
   bool m_bInitdone;
+
+  afx_msg void OnBnClickedAttAdd();
+  afx_msg void OnBnClickedAttRemove();
+  CString m_AttName;
+  CString m_AttFile;
+  CImage m_AttImage;
+  // Visible counterpart of CImage
+  CStatic m_AttStatic;
 };
 //-----------------------------------------------------------------------------
 // Local variables:
