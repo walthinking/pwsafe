@@ -786,7 +786,8 @@
 #define IDC_ATT_IMAGE                   1503
 #define IDC_ATT_NAME                    1504
 #define IDC_ATT_FILE                    1505
-#define IDC_ATT_ADD                     1506
+#define IDC_ATT_EXPORT                  1506
+#define IDC_ATT_IMPORT                  1507
 
 // Next default values for new objects
 // 

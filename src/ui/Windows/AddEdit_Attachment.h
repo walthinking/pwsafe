@@ -57,8 +57,11 @@ protected:
 private:
   bool m_bInitdone;
 
-  afx_msg void OnBnClickedAttAdd();
+  afx_msg void OnBnClickedAttImport();
+  afx_msg void OnBnClickedAttExport();
   afx_msg void OnBnClickedAttRemove();
+  void UpdateControls();
+
   CString m_AttName;
   CString m_AttFile;
   CImage m_AttImage;
