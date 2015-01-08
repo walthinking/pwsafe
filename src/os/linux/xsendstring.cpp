@@ -27,6 +27,9 @@
 #include <errno.h>
 #include <limits.h>
 
+#include <memory>
+#include <algorithm>
+#include <functional>
 
 #include <X11/Intrinsic.h> // in libxt-dev
 #include <X11/keysym.h>
@@ -191,48 +194,39 @@ int FindModifierMask(Display* disp, KeySym sym)
       }
     }
     XFreeModifiermap(modmap);
-    assert( modmask >= 3 && modmask <= 7);
   }
-  return 1 << modmask;
+  return modmask;
 }
 
 int CalcModifiersForKeysym(KeyCode code, KeySym sym, Display* disp)
 {
+  int modifiers = 0;
   int keysyms_per_keycode = 0;
-  const KeySym* symlist = XGetKeyboardMapping(disp, code, 1, &keysyms_per_keycode);
+  KeySym* symlist = XGetKeyboardMapping(disp, code, 1, &keysyms_per_keycode);
   if (symlist != NULL && keysyms_per_keycode > 0) {
-    const int ModeSwitchMask = FindModifierMask(disp, XK_Mode_switch);
-    const int Level3ShiftMask = FindModifierMask(disp, XK_ISO_Level3_Shift);
-    int mods[] = {
-      0,                  //none
-      ShiftMask,
-      ModeSwitchMask,
-      ShiftMask | ModeSwitchMask,
-      // beyond this, its all guesswork since there's no documentation, but see this:
-      //
-      //     http://superuser.com/questions/189869/xmodmap-six-characters-to-one-key
-      //
-      // Also, if you install mulitple keyboard layouts the number of keysyms-per-keycode
-      // will keep increasing to a max of 16 (up to 4 layouts can be installed together
-      // in Ubuntu 11.04).  For some keycodes, you will actually have non-NoSymbol
-      // keysyms beyond the first four
-      //
-      // We probably shouldn't go here if Mode_switch and ISO_Level3_Shift are assigned to
-      // the same modifier mask
-      Level3ShiftMask,
-      ShiftMask | Level3ShiftMask,
-      ModeSwitchMask | Level3ShiftMask,
-      ShiftMask | ModeSwitchMask | Level3ShiftMask,
-    };
-    const int max_keysym_index = std::min(int(NumberOf(mods)), keysyms_per_keycode);
-    for (int idx = 0; idx < max_keysym_index; ++idx) {
-      if (symlist[idx] == sym)
-        return mods[idx];
+    // Supported everywhere.  Note: order is important
+    std::vector<int> masks = {0, ShiftMask};
+    // These aren't necessarily supported in all systems.  Once again, order is important
+    for ( const auto s: {XK_Mode_switch, XK_ISO_Level3_Shift}) {
+      const int modshift = FindModifierMask(disp, s);
+      // May repeat.  Only consider it if we haven't added it already
+      if (modshift && std::find(masks.begin(), masks.end(), 1 << modshift) == masks.end()) {
+        std::vector<int> extra_masks;
+        // OR each element of mask with "1 << modshift" & insert the result in mask
+        std::transform(masks.begin(), masks.end(), std::back_inserter(extra_masks),
+                        std::bind(std::bit_or<int>(), std::placeholders::_1, 1 << modshift));
+        masks.insert(masks.end(), extra_masks.begin(), extra_masks.end());
+      }
     }
+    // Get the index of the symbol we are searching for
+    const auto max_keysym_index = std::min(masks.size(), static_cast<size_t>(keysyms_per_keycode));
+    // return the modifiers at the same index
+    const size_t match_index = std::find(symlist, symlist + max_keysym_index, sym) - symlist;
+    if ( match_index != max_keysym_index)
+        modifiers = masks[match_index];
+    XFree(symlist);
   }
-  // we should at least find the keysym without any mods (index 0)
-  assert(0);
-  return 0;
+  return modifiers;
 }
 
 KeySym wchar2keysym(wchar_t wc)
