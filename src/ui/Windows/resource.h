@@ -787,16 +787,15 @@
 #define IDC_ATT_IMAGE                   1504
 #define IDC_ATT_NAME                    1505
 #define IDC_ATT_FILE                    1506
-#define IDC_ATT_ADD                     1507
-
+#define IDC_ATT_EXPORT                  1507
+#define IDC_ATT_IMPORT                  1508
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        529
+#define _APS_NEXT_RESOURCE_VALUE        530
 #define _APS_NEXT_COMMAND_VALUE         30001
-#define _APS_NEXT_CONTROL_VALUE         1504
-#define _APS_NEXT_CONTROL_VALUE         1508
-#define _APS_NEXT_SYMED_VALUE           528
+#define _APS_NEXT_CONTROL_VALUE         1509
+#define _APS_NEXT_SYMED_VALUE           529
 #endif
 #endif
