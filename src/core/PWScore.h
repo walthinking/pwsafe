@@ -12,11 +12,9 @@
 //-----------------------------------------------------------------------------
 
 #include "os/pws_tchar.h"
-#include "ItemData.h"
 #include "StringX.h"
 #include "PWSfile.h"
 #include "PWSFilters.h"
-#include "os/UUID.h"
 #include "Report.h"
 #include "Proxy.h"
 #include "UIinterface.h"
@@ -464,6 +462,9 @@ private:
   virtual bool RemoveEmptyGroup(const StringX &sxEmptyGroup);
   virtual void RenameEmptyGroup(const StringX &sxOldPath, const StringX &sxNewPath);
 
+  virtual void DoAddAtt(const CItemAtt &att);
+  virtual void DoDeleteAtt(const CItemAtt &att);
+
   // End of Command Interface implementations
 
   void ProcessReadEntry(CItemData &ci_temp,
@@ -516,6 +517,9 @@ private:
   //  Key = entry's uuid; Value = entry's CItemData
   ItemList m_pwlist;
 
+  // Attachments, if any
+  AttList m_attlist;
+  
   // Alias/Shortcut structures
   // Permanent Multimap: since potentially more than one alias/shortcut per base
   //  Key = base uuid; Value = multiple alias/shortcut uuids
