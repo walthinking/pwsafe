@@ -1073,7 +1073,7 @@ int DboxMain::Save(const SaveType savetype)
   if (m_core.GetCurFile().empty())
     return SaveAs();
 
-  switch (m_core.GetReadFileVersion()) {
+  switch (m_core.GetFileVersion()) {
     case PWSfile::V30:
     case PWSfile::V40:
       if (prefs->GetPref(PWSprefs::BackupBeforeEverySave)) {
@@ -1244,8 +1244,8 @@ int DboxMain::SaveAs()
   StringX newfile;
   CString cs_msg, cs_title, cs_text, cs_temp;
 
-  if (m_core.GetReadFileVersion() != PWSfile::VCURRENT &&
-      m_core.GetReadFileVersion() != PWSfile::UNKNOWN_VERSION) {
+  if (m_core.GetFileVersion() != PWSfile::VCURRENT &&
+      m_core.GetFileVersion() != PWSfile::UNKNOWN_VERSION) {
     cs_msg.Format(IDS_NEWFORMAT2, m_core.GetCurFile().c_str());
     cs_title.LoadString(IDS_VERSIONWARNING);
     CGeneralMsgBox gmb;

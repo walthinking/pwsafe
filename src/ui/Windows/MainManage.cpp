@@ -474,7 +474,7 @@ void DboxMain::OnOptions()
     // Allow even if no entries (yet) in database and if the database is R-O.
     // In the latter case - just won't be saved but will do what the user wants
     // in this session with this database, until the database is closed.
-    if (m_core.GetReadFileVersion() == PWSfile::VCURRENT) {
+    if (m_core.GetFileVersion() == PWSfile::VCURRENT) {
       if (sxOldDBPrefsString != sxNewDBPrefsString) {
         // Determine whether Tree needs redisplayng due to change
         // in what is shown (e.g. usernames/passwords)
@@ -692,7 +692,7 @@ void DboxMain::OnManagePasswordPolicies()
       StringX sxNewDBPrefsString(PWSprefs::GetInstance()->Store(true));
 
       // Set up Command to update string in database
-      if (m_core.GetReadFileVersion() == PWSfile::VCURRENT) {
+      if (m_core.GetFileVersion() == PWSfile::VCURRENT) {
           Command *pcmd1 = DBPrefsCommand::Create(&m_core, sxNewDBPrefsString);
           pmulticmds->Add(pcmd1);
       }
