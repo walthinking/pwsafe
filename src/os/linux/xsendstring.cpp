@@ -78,71 +78,6 @@ int ErrorHandler(Display *my_dpy, XErrorEvent *event)
 
 
 
-
-void XTest_SendEvent(XKeyEvent *event)
-{
-  XTestFakeKeyEvent(event->display, event->keycode, event->type == KeyPress, 0);
-}
-
-void XSendKeys_SendEvent(XKeyEvent *event)
-{
-    XSendEvent(event->display, event->window, TRUE, KeyPressMask, reinterpret_cast<XEvent *>(event));
-}
-
-void XSendKeys_SendKeyEvent(XKeyEvent* event)
-{
-  event->type = KeyPress;
-  XSendKeys_SendEvent(event);
-
-  event->type = KeyRelease;
-  XSendKeys_SendEvent(event);
-
-  XFlush(event->display);
-}
-
-
-void XTest_SendKeyEvent(XKeyEvent* event)
-{
-  XKeyEvent shiftEvent;
-
-  /* must simulate the shift-press for CAPS and shifted keypresses manually */
-  if (event->state & ShiftMask) {
-    memcpy(&shiftEvent, event, sizeof(shiftEvent));
-
-    shiftEvent.keycode = XKeysymToKeycode(event->display, XK_Shift_L);
-    shiftEvent.type = KeyPress;
-
-    XTest_SendEvent(&shiftEvent);
-  }
-
-  event->type = KeyPress;
-  XTest_SendEvent(event);
-
-  event->type = KeyRelease;
-  XTest_SendEvent(event);
-
-  if (event->state & ShiftMask) {
-    shiftEvent.type = KeyRelease;
-    XTest_SendEvent(&shiftEvent);
-  }
-
-  XFlush(event->display);
-
-}
-
-Bool UseXTest(Display* disp)
-{
-  int major_opcode, first_event, first_error;
-  static Bool useXTest;
-  static int checked = 0;
-
-  if (!checked) {
-    useXTest = XQueryExtension(disp, "XTEST", &major_opcode, &first_event, &first_error);
-    checked = 1;
-  }
-  return useXTest;
-}
-
 class AutotypeEvent: public XKeyEvent {
 public:
   AutotypeEvent()
@@ -165,6 +100,106 @@ public:
   bool operator !() const { return display == NULL; }
 };
 
+
+class AutotypeMethodBase
+{
+protected:
+  Display *m_display;
+  bool     m_emulateMods = true;
+  
+public:
+	//TODO: wrap m_display in a shared_ptr
+  AutotypeMethodBase(Display *display, bool emulateMods): 
+			m_display(display), m_emulateMods(emulateMods) {
+	XSetErrorHandler(ErrorHandler);
+	atGlobals.error_detected = false;
+  }
+  
+  // virtual, because derived classes will have clean-ups of their own
+  virtual ~AutotypeMethodBase() {
+	  XSetErrorHandler(NULL);
+  }
+  
+  // This function does the most heavy lifting, using the bare minimum api-specific 
+  // support from derived classes implemented by overriding GenerateKeyEvent
+  void operator()(unsigned int keycode, unsigned int state, Time event_time = CurrentTime);
+  void operator()(XKeyEvent &ev);
+  
+protected:
+  // This is not exposed as it will probably not do what you think.  Use SendKeyEvent above
+  virtual void GenerateKeyEvent(Display *display, XKeyEvent *ev) = 0;
+};
+
+void AutotypeMethodBase::operator()(unsigned int keycode, unsigned int state, 
+							Time event_time /*= CurrentTime*/)
+{
+	XKeyEvent ev;
+	ev.display = m_display;
+	ev.keycode = keycode;
+	ev.state = state;
+	ev.time = event_time;
+	operator()(ev);
+}
+
+void AutotypeMethodBase::operator()(XKeyEvent &ev)
+{
+	ev.type = KeyPress;
+	GenerateKeyEvent(ev.display? ev.display: m_display, &ev);
+	ev.type = KeyRelease;
+	GenerateKeyEvent(ev.display? ev.display: m_display, &ev);
+}
+
+class AutotypeMethodXTEST: public AutotypeMethodBase
+{
+public:
+	AutotypeMethodXTEST(Display *display, bool emulateMods): 
+	AutotypeMethodBase(display, emulateMods){ XTestGrabControl(display, true); }
+	~AutotypeMethodXTEST() { XTestGrabControl(m_display, false); }
+	
+protected:
+  virtual void GenerateKeyEvent(Display *display, XKeyEvent *ev) {
+    XTestFakeKeyEvent(display, ev->keycode, ev->type == KeyPress, 0);
+  }
+
+};
+
+class AutotypeMethodSendKeys: public AutotypeMethodBase
+{
+public:
+	AutotypeMethodSendKeys(Display *display, bool emulateMods):
+				AutotypeMethodBase(display, emulateMods){}
+	~AutotypeMethodSendKeys() { XSync(m_display, False); }
+protected:
+  virtual void GenerateKeyEvent(Display *display, XKeyEvent *ev) {
+	XSendEvent(display, ev->window, TRUE, 
+					ev->type == KeyPress? KeyPressMask: KeyReleaseMask, 
+					reinterpret_cast<XEvent *>(ev));
+  }
+};
+
+
+typedef std::unique_ptr<AutotypeMethodBase> AutoTypeMethodPtr;
+
+AutoTypeMethodPtr GetAutotypeMethod(Display* disp, 
+									pws_os::AutotypeMethod method_preference)
+{
+  int major_opcode, first_event, first_error;
+  AutotypeMethodBase *method_ptr = nullptr;
+  if (method_preference != pws_os::ATMETHOD_XSENDKEYS &&
+			XQueryExtension(disp, "XTEST", &major_opcode, &first_event, &first_error)) {
+    method_ptr = new AutotypeMethodXTEST(disp, true); // true => emulate modifiers independently
+  }
+  else {
+	method_ptr = new AutotypeMethodSendKeys(disp, false); // false => no emulation for modifier keys
+  }
+  return AutoTypeMethodPtr(method_ptr);
+}
+
+bool XExtensionAvailable(Display *disp, const char* ext)
+{
+  int major_opcode, first_event, first_error;
+  return XQueryExtension(disp, ext, &major_opcode, &first_event, &first_error) == True;
+}
 
 int FindModifierMask(Display* disp, KeySym sym)
 {
@@ -338,19 +373,7 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
     }
   }
 
-  XSetErrorHandler(ErrorHandler);
-  atGlobals.error_detected = False;
-
-  bool useXTEST = (UseXTest(event.display) && method != pws_os::ATMETHOD_XSENDKEYS);
-  void (*KeySendFunction)(XKeyEvent*);
-
-  if ( useXTEST) {
-    KeySendFunction = XTest_SendKeyEvent;
-    XTestGrabControl(event.display, True);
-  }
-  else {
-    KeySendFunction = XSendKeys_SendKeyEvent;
-  }
+  AutoTypeMethodPtr sendkeys = GetAutotypeMethod(event.display, method);
 
   for (KeyPressInfoVector::const_iterator itr = keypresses.begin(); itr != keypresses.end()
                               && !atGlobals.error_detected; ++itr) {
@@ -358,18 +381,9 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
     event.state = itr->state;
     event.time = CurrentTime;
 
-    KeySendFunction(&event);
+    (*sendkeys)(event);
     pws_os::sleep_ms(delayMS);
   }
-
-  if (useXTEST) {
-    XTestGrabControl(event.display, False);
-  }
-  else {
-    XSync(event.display, False);
-  }
-
-  XSetErrorHandler(NULL);
 }
 
 } // anonymous namespace
