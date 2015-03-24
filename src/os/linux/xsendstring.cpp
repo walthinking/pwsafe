@@ -464,10 +464,9 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
   // Insert a Ctrl-A (lowercase) the first thing to
   // select all chars when we enter a textbox
 
-  const KeyCode Key_A = XKeysymToKeycode(event.display, XK_a);
+  const KeyPressInfo selectAll = { XKeysymToKeycode(event.display, XK_a), ControlMask };
 
   if ( eraseFieldBeforeAutotype && !str.empty() && dirtyHackSelectAllNext) {
-	KeyPressInfo selectAll = { Key_A, ControlMask };
 	keypresses.push_back(selectAll);
   dirtyHackSelectAllNext = false;
   }
@@ -507,7 +506,6 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
 	// Insert a Ctrl-A (lowercase) to select all chars when we move
 	// to another textbox after a tab character
 	if ( eraseFieldBeforeAutotype && *srcIter == _T('\t')) {
-		KeyPressInfo selectAll = { Key_A, ControlMask };
 		keypresses.push_back(selectAll);
 	}
   }
