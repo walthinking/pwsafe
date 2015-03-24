@@ -129,8 +129,8 @@ const PWSprefs::boolPref PWSprefs::m_bool_prefs[NumBoolPrefs] = {
   {_T("CopyPasswordWhenBrowseToURL"), false, ptDatabase},   // database
   {_T("UseAltAutoType"), false, ptApplication},             //application
   {_T("IgnoreHelpLoadError"), false, ptApplication},         //application
-  {_T("EraseAllBeforeAutotyping"), false, ptApplication},    //application
-  {_T("EmulateModifiersSeparately"), false, ptApplication},  //application
+  {_T("EraseAllBeforeAutotyping"), true, ptApplication},    //application
+  {_T("EmulateModifiersSeparately"), true, ptApplication},  //application
 };
 
 // Default value = -1 means set at runtime
