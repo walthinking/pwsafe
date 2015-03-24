@@ -122,6 +122,8 @@ public:
     CopyPasswordWhenBrowseToURL,
     UseAltAutoType,  //Only under X-Windows
     IgnoreHelpLoadError, //Only under WX
+    EraseAllBeforeAutotyping,   // Do a Ctrl-A before autotyping keys
+    EmulateModifiersSeparately, // Autotype SHIFT etc. keys independently, not just as flags with other keys
     NumBoolPrefs};
 
   enum IntPrefs {Column1Width, Column2Width, Column3Width, Column4Width,

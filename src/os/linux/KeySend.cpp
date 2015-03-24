@@ -11,26 +11,53 @@
 #include "../../core/Util.h"
 #include "../../core/PWSprefs.h"
 
+/////////////////////////////////////////////////////////////////////
+// CKeySendImpl - Linux specific bits
+///////////////
+class CKeySendImpl
+{
+  static bool GetPref(PWSprefs::BoolPrefs pref) {
+    return PWSprefs::GetInstance()->GetPref(pref);
+  }
+
+  static pws_os::AutotypeMethod DefaultAutytypeMethod() {
+    return GetPref(PWSprefs::UseAltAutoType)? pws_os::ATMETHOD_XTEST: pws_os::ATMETHOD_XSENDKEYS;
+  }
+
+  pws_os::AutotypeMethod m_autotypeMethod = DefaultAutytypeMethod();
+  bool m_eraseBeforeTyping = GetPref(PWSprefs::EraseAllBeforeAutotyping);
+  bool m_emulateModsSeparately = GetPref(PWSprefs::EmulateModifiersSeparately);
+  bool m_justStarted = true;
+
+public:
+  void SendString(const StringX &data, unsigned delay);
+};
+
+void CKeySendImpl::SendString(const StringX &data, unsigned delay)
+{
+  if (m_justStarted) {
+    pws_os::SelectAll();
+    m_justStarted = false;
+  }
+  pws_os::SendString(data, m_autotypeMethod, delay, m_eraseBeforeTyping, m_emulateModsSeparately);
+}
+
+////////////////////////////////////////////////////
+// CKeySend - The generic implementation
 CKeySend::CKeySend(bool, unsigned defaultDelay)
-  : m_delayMS(defaultDelay)
+  : m_delayMS(defaultDelay),
+    m_impl(new CKeySendImpl)
 {
 }
 
 CKeySend::~CKeySend()
 {
+  delete m_impl;
 }
 
 void CKeySend::SendString(const StringX &data)
 {
-  /**
-   * Default method is via XSendKeys. Since this may be blocked,
-   * we also support XTEST, even though the latter is less capable (?)
-   */
-
-  bool useAlt = PWSprefs::GetInstance()->GetPref(PWSprefs::UseAltAutoType);
-  pws_os::AutotypeMethod am = useAlt ? pws_os::ATMETHOD_XTEST : pws_os::ATMETHOD_XSENDKEYS;
-
-  pws_os::SendString(data, am, m_delayMS);
+  m_impl->SendString(data, m_delayMS);
 }
 
 void CKeySend::SetDelay(unsigned d)

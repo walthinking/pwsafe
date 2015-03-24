@@ -20,7 +20,9 @@ namespace pws_os {
   /* Set the method to AUTO if you're not sure what it should be */
   typedef enum { ATMETHOD_AUTO, ATMETHOD_XTEST, ATMETHOD_XSENDKEYS } AutotypeMethod;
   
-  void SendString(const StringX& str, AutotypeMethod method, unsigned delayMS);
+  void SelectAll();
+  void SendString(const StringX& str, AutotypeMethod method, unsigned delayMS,
+						bool eraseFieldBeforeAutotype=true, bool emulateMods = true);
 }
 #endif
 

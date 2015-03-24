@@ -103,6 +103,27 @@ public:
 
 class AutotypeMethodBase
 {
+  struct ModInfo {
+    enum ModType {Shift /*press and hold*/, Lock, Latch, Unknown};
+
+    int mask;
+    int ModMapIndex;
+    KeySym sym;
+    KeyCode key;
+    ModType type;
+
+  }  m_mods[8] =    {{ShiftMask,   ShiftMapIndex,   XK_Shift_L,   0, ModInfo::Shift},
+                     {LockMask,    LockMapIndex,    XK_Caps_Lock, 0, ModInfo::Lock},
+                     {ControlMask, ControlMapIndex, XK_Control_L, 0, ModInfo::Shift},
+                     {Mod1Mask,    Mod1MapIndex,    NoSymbol,     0, ModInfo::Unknown},
+                     {Mod2Mask,    Mod2MapIndex,    NoSymbol,     0, ModInfo::Unknown},
+                     {Mod3Mask,    Mod3MapIndex,    NoSymbol,     0, ModInfo::Unknown},
+                     {Mod4Mask,    Mod4MapIndex,    NoSymbol,     0, ModInfo::Unknown},
+                     {Mod5Mask,    Mod5MapIndex,    NoSymbol,     0, ModInfo::Unknown},
+                   };
+
+  void InitModInfo();
+
 protected:
   Display *m_display;
   bool     m_emulateMods = true;
@@ -113,6 +134,7 @@ public:
 			m_display(display), m_emulateMods(emulateMods) {
 	XSetErrorHandler(ErrorHandler);
 	atGlobals.error_detected = false;
+  InitModInfo();
   }
   
   // virtual, because derived classes will have clean-ups of their own
@@ -125,10 +147,69 @@ public:
   void operator()(unsigned int keycode, unsigned int state, Time event_time = CurrentTime);
   void operator()(XKeyEvent &ev);
   
+  bool EmulatesMods() const { return m_emulateMods; }
+  void EmulateMods(bool emulate) { m_emulateMods = emulate; }
+
 protected:
   // This is not exposed as it will probably not do what you think.  Use SendKeyEvent above
   virtual void GenerateKeyEvent(XKeyEvent *ev) = 0;
+
+  void PressModifiers(int masks) { SetModifiers(masks, true); }
+  void ReleaseModifiers(int masks) { SetModifiers(masks, false); }
+  void SetModifiers(int masks, bool set);
 };
+
+void AutotypeMethodBase::InitModInfo()
+{
+  XModifierKeymap* modmap = XGetModifierMapping(m_display);
+  if (modmap) {
+    for(auto& m: m_mods) {
+      if (m.key == 0) {
+        if (m.sym != NoSymbol) {
+          m.key = XKeysymToKeycode(m_display, m.sym);
+        }
+        if (!m.key) {  //probably useless, but I'm not sure
+          const auto keys = modmap->modifiermap + m.ModMapIndex*modmap->max_keypermod;
+          const auto keyptr = std::find_if(keys, keys + modmap->max_keypermod, [](KeyCode k){ return k != 0; });
+          m.key = (keyptr == keys + modmap->max_keypermod? 0: *keyptr);
+        }
+      }
+
+      if (m.sym == NoSymbol && m.key != 0) {
+        int keysyms_per_keycode = 0;
+        KeySym* symlist = XGetKeyboardMapping(m_display, m.key, 1, &keysyms_per_keycode);
+        if (symlist) {
+          // The keysym for a modifier must not require a modifier itself
+          assert(symlist[0] != NoSymbol);
+          m.sym = symlist[0];
+          XFree(symlist);
+        }
+      }
+      if (m.type == ModInfo::Unknown && m.sym != NoSymbol) {
+        switch (m.sym) {
+          case XK_Meta_L: case XK_Meta_R: case XK_Alt_L: case XK_Alt_R:
+          case XK_Super_L: case XK_Super_R: case XK_Hyper_L: case XK_Hyper_R:
+            m.type = ModInfo::Shift;
+            break;
+          default:
+            const char *symstr = XKeysymToString(m.sym);
+            if (symstr) {
+              const size_t s_len = strlen(symstr);
+              auto ends_with = [symstr, s_len](const char* e, size_t e_len) {
+                return s_len >= e_len && strncmp(symstr + s_len - e_len, e, e_len) == 0;
+              };
+              m.type =  ends_with("Latch", 5)? ModInfo::Latch
+                       : ends_with("Lock", 4)? ModInfo::Lock
+                       : ends_with("Shift", 5) || ends_with("Switch", 6)? ModInfo::Shift
+                       : ModInfo::Unknown;
+            }
+            break;
+        }
+      }
+    }
+    XFreeModifiermap(modmap);
+  }
+}
 
 void AutotypeMethodBase::operator()(unsigned int keycode, unsigned int state, 
 							Time event_time /*= CurrentTime*/)
@@ -143,10 +224,49 @@ void AutotypeMethodBase::operator()(unsigned int keycode, unsigned int state,
 
 void AutotypeMethodBase::operator()(XKeyEvent &ev)
 {
+  if (!ev.display)
+    ev.display = m_display;
+  else {
+    assert( ev.display == m_display);
+  }
+
+  if (m_emulateMods && ev.state) {
+    PressModifiers(ev.state);
+  }
+
 	ev.type = KeyPress;
 	GenerateKeyEvent(&ev);
 	ev.type = KeyRelease;
 	GenerateKeyEvent(&ev);
+
+  if (m_emulateMods && ev.state) {
+    ReleaseModifiers(ev.state);
+  }
+
+  XFlush(m_display);
+}
+
+void AutotypeMethodBase::SetModifiers(int masks, bool set)
+{
+  const int shift_events[] =  { (set? KeyPress: KeyRelease), 0};
+  const int lock_events[] = {KeyPress, KeyRelease, 0};
+  const int latch_events[] = {KeyPress, KeyRelease, KeyPress, KeyRelease, 0};
+
+  const int* key_event_types[] = {shift_events, lock_events, latch_events, shift_events /*Unknown*/};
+
+  for (auto mod: m_mods) {
+    if (mod.mask & masks) {
+      const auto *events = key_event_types[mod.type];
+      for( const auto *e = events; *e; e++) {
+        XKeyEvent ev{};
+        ev.type = *e;
+        ev.display = m_display;
+        ev.keycode = mod.key;
+        ev.time = CurrentTime;
+        GenerateKeyEvent(&ev);
+      }
+    }
+  }
 }
 
 class AutotypeMethodXTEST: public AutotypeMethodBase
@@ -309,6 +429,7 @@ public:
   const char* str() const {return bytes;}
 };
 
+bool dirtyHackSelectAllNext = false;
 /*
  * DoSendString - actually sends a string to the X Window having input focus
  *
@@ -320,7 +441,8 @@ public:
  * Some escape sequences can be converted to the appropriate KeyCodes
  * by this function.  See the code below for details
  */
-void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned delayMS)
+void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned delayMS,
+			bool eraseFieldBeforeAutotype, bool emulateMods)
 {
   atGlobals.error_detected = false;
   atGlobals.errorString[0] = 0;
@@ -338,6 +460,15 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
   // Abort if any of the characters cannot be converted
   typedef std::vector<KeyPressInfo> KeyPressInfoVector;
   KeyPressInfoVector keypresses;
+
+  // Insert a Ctrl-A (lowercase) the first thing to
+  // select all chars when we enter a textbox
+
+  if ( eraseFieldBeforeAutotype && !str.empty() && dirtyHackSelectAllNext) {
+	KeyPressInfo selectAll = { XK_a, ControlMask };
+	keypresses.push_back(selectAll);
+  dirtyHackSelectAllNext = false;
+  }
 
   for (StringX::const_iterator srcIter = str.begin(); srcIter != str.end(); ++srcIter) {
 
@@ -371,9 +502,16 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
       atGlobals.error_detected = True;
       return;
     }
+	// Insert a Ctrl-A (lowercase) to select all chars when we move
+	// to another textbox after a tab character
+	if ( eraseFieldBeforeAutotype && *srcIter == _T('\t')) {
+		KeyPressInfo selectAll = { XK_a, ControlMask };
+		keypresses.push_back(selectAll);
+	}
   }
 
   AutoTypeMethodPtr sendkeys = GetAutotypeMethod(event.display, method);
+  sendkeys->EmulateMods(emulateMods);
 
   for (KeyPressInfoVector::const_iterator itr = keypresses.begin(); itr != keypresses.end()
                               && !atGlobals.error_detected; ++itr) {
@@ -395,13 +533,19 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
  * just throws an exception if DoSendString encounters an error.
  *
  */
-void pws_os::SendString(const StringX& str, AutotypeMethod method, unsigned delayMS)
+void pws_os::SendString(const StringX& str, AutotypeMethod method, unsigned delayMS, bool eraseFieldBeforeAutotype/*=true*/,
+							bool emulateMods /*= true*/)
 {
   atGlobals.error_detected = false;
   atGlobals.errorString[0] = 0;
 
-  DoSendString(str, method, delayMS);
+  DoSendString(str, method, delayMS, eraseFieldBeforeAutotype, emulateMods);
 
   if (atGlobals.error_detected)
     throw autotype_exception();
+}
+
+void pws_os::SelectAll()
+{
+  dirtyHackSelectAllNext = true;
 }
