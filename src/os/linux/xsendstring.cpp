@@ -278,7 +278,7 @@ public:
 	
 protected:
   virtual void GenerateKeyEvent(XKeyEvent *ev) {
-    XTestFakeKeyEvent(ev->display, ev->keycode, ev->type == KeyPress, 0);
+    XTestFakeKeyEvent(ev->display, ev->keycode, ev->type == KeyPress, CurrentTime);
   }
 
 };
