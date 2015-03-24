@@ -35,7 +35,7 @@ public:
 
 void CKeySendImpl::SendString(const StringX &data, unsigned delay)
 {
-  if (m_justStarted) {
+  if (m_justStarted  && m_eraseBeforeTyping) {
     pws_os::SelectAll();
     m_justStarted = false;
   }
