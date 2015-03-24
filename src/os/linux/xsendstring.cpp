@@ -127,7 +127,7 @@ public:
   
 protected:
   // This is not exposed as it will probably not do what you think.  Use SendKeyEvent above
-  virtual void GenerateKeyEvent(Display *display, XKeyEvent *ev) = 0;
+  virtual void GenerateKeyEvent(XKeyEvent *ev) = 0;
 };
 
 void AutotypeMethodBase::operator()(unsigned int keycode, unsigned int state, 
@@ -144,9 +144,9 @@ void AutotypeMethodBase::operator()(unsigned int keycode, unsigned int state,
 void AutotypeMethodBase::operator()(XKeyEvent &ev)
 {
 	ev.type = KeyPress;
-	GenerateKeyEvent(ev.display? ev.display: m_display, &ev);
+	GenerateKeyEvent(&ev);
 	ev.type = KeyRelease;
-	GenerateKeyEvent(ev.display? ev.display: m_display, &ev);
+	GenerateKeyEvent(&ev);
 }
 
 class AutotypeMethodXTEST: public AutotypeMethodBase
@@ -157,8 +157,8 @@ public:
 	~AutotypeMethodXTEST() { XTestGrabControl(m_display, false); }
 	
 protected:
-  virtual void GenerateKeyEvent(Display *display, XKeyEvent *ev) {
-    XTestFakeKeyEvent(display, ev->keycode, ev->type == KeyPress, 0);
+  virtual void GenerateKeyEvent(XKeyEvent *ev) {
+    XTestFakeKeyEvent(ev->display, ev->keycode, ev->type == KeyPress, 0);
   }
 
 };
@@ -170,8 +170,8 @@ public:
 				AutotypeMethodBase(display, emulateMods){}
 	~AutotypeMethodSendKeys() { XSync(m_display, False); }
 protected:
-  virtual void GenerateKeyEvent(Display *display, XKeyEvent *ev) {
-	XSendEvent(display, ev->window, TRUE, 
+  virtual void GenerateKeyEvent(XKeyEvent *ev) {
+	XSendEvent(ev->display, ev->window, TRUE,
 					ev->type == KeyPress? KeyPressMask: KeyReleaseMask, 
 					reinterpret_cast<XEvent *>(ev));
   }
