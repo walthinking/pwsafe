@@ -25,20 +25,18 @@ class CKeySendImpl
   }
 
   pws_os::AutotypeMethod m_autotypeMethod = DefaultAutytypeMethod();
-  bool m_eraseBeforeTyping = GetPref(PWSprefs::EraseAllBeforeAutotyping);
-  bool m_emulateModsSeparately = GetPref(PWSprefs::EmulateModifiersSeparately);
-  bool m_justStarted = true;
+  bool m_emulateModsSeparately = true;
+  bool m_eraseBeforeTyping = false;
 
 public:
   void SendString(const StringX &data, unsigned delay);
+  void EmulateMods(bool emulate) { m_emulateModsSeparately = emulate; }
+  bool IsEmulatingMods() const { return m_emulateModsSeparately; }
+  void SelectAll() { m_eraseBeforeTyping = true; pws_os::SelectAll(); }
 };
 
 void CKeySendImpl::SendString(const StringX &data, unsigned delay)
 {
-  if (m_justStarted  && m_eraseBeforeTyping) {
-    pws_os::SelectAll();
-    m_justStarted = false;
-  }
   pws_os::SendString(data, m_autotypeMethod, delay, m_eraseBeforeTyping, m_emulateModsSeparately);
 }
 
@@ -93,4 +91,19 @@ void CKeySend::BlockInput(bool) const
 void CKeySend::ResetKeyboardState() const
 {
   // XXX Need we implement this for X?
+}
+
+void CKeySend::SelectAll() const
+{
+  m_impl->SelectAll();
+}
+
+void CKeySend::EmulateMods(bool emulate)
+{
+  m_impl->EmulateMods(emulate);
+}
+
+bool CKeySend::IsEmulatingMods() const
+{
+  return m_impl->IsEmulatingMods();
 }
