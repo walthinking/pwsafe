@@ -19,10 +19,26 @@
 namespace pws_os {
   /* Set the method to AUTO if you're not sure what it should be */
   typedef enum { ATMETHOD_AUTO, ATMETHOD_XTEST, ATMETHOD_XSENDKEYS } AutotypeMethod;
-  
-  void SelectAll();
-  void SendString(const StringX& str, AutotypeMethod method, unsigned delayMS,
-						bool eraseFieldBeforeAutotype=true, bool emulateMods = true);
 }
+
+/////////////////////////////////////////////////////////////////////
+// CKeySendImpl - Linux specific bits
+///////////////
+class CKeySendImpl
+{
+    pws_os::AutotypeMethod m_autotypeMethod;
+    bool m_emulateModsSeparately = true;
+    bool m_eraseBeforeTyping = false;
+
+  public:
+
+    CKeySendImpl(pws_os::AutotypeMethod method): m_autotypeMethod(method){}
+
+    void SendString(const StringX &data, unsigned delay);
+    void EmulateMods(bool emulate) { m_emulateModsSeparately = emulate; }
+    bool IsEmulatingMods() const { return m_emulateModsSeparately; }
+    void SelectAll();
+};
+
 #endif
 

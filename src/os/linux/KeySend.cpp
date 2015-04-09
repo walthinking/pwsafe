@@ -11,40 +11,20 @@
 #include "../../core/Util.h"
 #include "../../core/PWSprefs.h"
 
-/////////////////////////////////////////////////////////////////////
-// CKeySendImpl - Linux specific bits
-///////////////
-class CKeySendImpl
-{
-  static bool GetPref(PWSprefs::BoolPrefs pref) {
-    return PWSprefs::GetInstance()->GetPref(pref);
-  }
-
-  static pws_os::AutotypeMethod DefaultAutytypeMethod() {
-    return GetPref(PWSprefs::UseAltAutoType)? pws_os::ATMETHOD_XTEST: pws_os::ATMETHOD_XSENDKEYS;
-  }
-
-  pws_os::AutotypeMethod m_autotypeMethod = DefaultAutytypeMethod();
-  bool m_emulateModsSeparately = true;
-  bool m_eraseBeforeTyping = false;
-
-public:
-  void SendString(const StringX &data, unsigned delay);
-  void EmulateMods(bool emulate) { m_emulateModsSeparately = emulate; }
-  bool IsEmulatingMods() const { return m_emulateModsSeparately; }
-  void SelectAll() { m_eraseBeforeTyping = true; pws_os::SelectAll(); }
-};
-
-void CKeySendImpl::SendString(const StringX &data, unsigned delay)
-{
-  pws_os::SendString(data, m_autotypeMethod, delay, m_eraseBeforeTyping, m_emulateModsSeparately);
+static bool GetPref(PWSprefs::BoolPrefs pref) {
+  return PWSprefs::GetInstance()->GetPref(pref);
 }
+
+static pws_os::AutotypeMethod DefaultAutytypeMethod() {
+  return GetPref(PWSprefs::UseAltAutoType)? pws_os::ATMETHOD_XTEST: pws_os::ATMETHOD_XSENDKEYS;
+}
+
 
 ////////////////////////////////////////////////////
 // CKeySend - The generic implementation
 CKeySend::CKeySend(bool, unsigned defaultDelay)
   : m_delayMS(defaultDelay),
-    m_impl(new CKeySendImpl)
+    m_impl(new CKeySendImpl(DefaultAutytypeMethod()))
 {
 }
 

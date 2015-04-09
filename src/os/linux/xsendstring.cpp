@@ -526,26 +526,19 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
 
 } // anonymous namespace
 
-/*
- * SendString - The interface method for CKeySend
- *
- * The actual work is done by DoSendString above. This function just
- * just throws an exception if DoSendString encounters an error.
- *
- */
-void pws_os::SendString(const StringX& str, AutotypeMethod method, unsigned delayMS, bool eraseFieldBeforeAutotype/*=true*/,
-							bool emulateMods /*= true*/)
+void CKeySendImpl::SendString(const StringX& str, unsigned delayMS)
 {
   atGlobals.error_detected = false;
   atGlobals.errorString[0] = 0;
 
-  DoSendString(str, method, delayMS, eraseFieldBeforeAutotype, emulateMods);
+  DoSendString(str, m_autotypeMethod, delayMS, m_eraseBeforeTyping, m_emulateModsSeparately);
 
   if (atGlobals.error_detected)
     throw autotype_exception();
 }
 
-void pws_os::SelectAll()
+void CKeySendImpl::SelectAll()
 {
+  m_eraseBeforeTyping = true;
   dirtyHackSelectAllNext = true;
 }
