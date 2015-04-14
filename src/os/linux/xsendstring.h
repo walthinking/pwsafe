@@ -24,20 +24,27 @@ namespace pws_os {
 /////////////////////////////////////////////////////////////////////
 // CKeySendImpl - Linux specific bits
 ///////////////
+
+class AutotypeMethodBase;
+struct _XDisplay;  // I don't want to include Xlib headers here
+
 class CKeySendImpl
 {
-    pws_os::AutotypeMethod m_autotypeMethod;
     bool m_emulateModsSeparately = true;
-    bool m_eraseBeforeTyping = false;
 
+    _XDisplay *m_display;
+    AutotypeMethodBase *m_method;
+
+    void DoSendString(const StringX& str, unsigned delayMS, bool emulateMods);
   public:
 
-    CKeySendImpl(pws_os::AutotypeMethod method): m_autotypeMethod(method){}
+    CKeySendImpl(pws_os::AutotypeMethod method);
+    ~CKeySendImpl();
 
     void SendString(const StringX &data, unsigned delay);
     void EmulateMods(bool emulate) { m_emulateModsSeparately = emulate; }
     bool IsEmulatingMods() const { return m_emulateModsSeparately; }
-    void SelectAll();
+    void SelectAll(unsigned delayMS);
 };
 
 #endif

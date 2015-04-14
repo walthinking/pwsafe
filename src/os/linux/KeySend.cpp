@@ -75,7 +75,7 @@ void CKeySend::ResetKeyboardState() const
 
 void CKeySend::SelectAll() const
 {
-  m_impl->SelectAll();
+  m_impl->SelectAll(m_delayMS);
 }
 
 void CKeySend::EmulateMods(bool emulate)

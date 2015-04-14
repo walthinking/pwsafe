@@ -41,8 +41,6 @@
 #include "../../core/StringX.h"
 #include "./unicode2keysym.h"
 
-namespace { // anonymous namespace for hiding
-  //           local variables and functions
 typedef struct _KeyPress {
   KeyCode code;
   unsigned int state;
@@ -80,24 +78,15 @@ int ErrorHandler(Display *my_dpy, XErrorEvent *event)
 
 class AutotypeEvent: public XKeyEvent {
 public:
-  AutotypeEvent()
+  AutotypeEvent(Display *disp)
   {
-    display = XOpenDisplay(NULL);
-    if (display) {
-      int    revert_to;
-      XGetInputFocus(display, &window, &revert_to);
-      subwindow = None;
-      x = y = x_root = y_root = 1;
-      same_screen = True;
-    }
+    display = disp;
+    int    revert_to;
+    XGetInputFocus(display, &window, &revert_to);
+    subwindow = None;
+    x = y = x_root = y_root = 1;
+    same_screen = True;
   }
-
-  ~AutotypeEvent() {
-    if (display)
-      XCloseDisplay(display);
-  }
-
-  bool operator !() const { return display == NULL; }
 };
 
 
@@ -298,9 +287,7 @@ protected:
 };
 
 
-typedef std::unique_ptr<AutotypeMethodBase> AutoTypeMethodPtr;
-
-AutoTypeMethodPtr GetAutotypeMethod(Display* disp, 
+AutotypeMethodBase* GetAutotypeMethod(Display* disp,
 									pws_os::AutotypeMethod method_preference)
 {
   int major_opcode, first_event, first_error;
@@ -312,7 +299,7 @@ AutoTypeMethodPtr GetAutotypeMethod(Display* disp,
   else {
 	method_ptr = new AutotypeMethodSendKeys(disp, false); // false => no emulation for modifier keys
   }
-  return AutoTypeMethodPtr(method_ptr);
+  return method_ptr;
 }
 
 bool XExtensionAvailable(Display *disp, const char* ext)
@@ -429,7 +416,6 @@ public:
   const char* str() const {return bytes;}
 };
 
-bool dirtyHackSelectAllNext = false;
 /*
  * DoSendString - actually sends a string to the X Window having input focus
  *
@@ -441,35 +427,17 @@ bool dirtyHackSelectAllNext = false;
  * Some escape sequences can be converted to the appropriate KeyCodes
  * by this function.  See the code below for details
  */
-void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned delayMS,
-			bool eraseFieldBeforeAutotype, bool emulateMods)
+void CKeySendImpl::DoSendString(const StringX& str, unsigned delayMS, bool emulateMods)
 {
   atGlobals.error_detected = false;
   atGlobals.errorString[0] = 0;
 
-  AutotypeEvent event;
-  if (!event) {
-    if (!atGlobals.error_detected)
-      atGlobals.error_detected = true;
-    if (!atGlobals.errorString[0])
-      strncpy(atGlobals.errorString, "Could not open X display for autotyping", NumberOf(atGlobals.errorString));
-    throw autotype_exception();
-  }
+  AutotypeEvent event(m_display);
 
   // convert all the chars into keycodes and required shift states first
   // Abort if any of the characters cannot be converted
   typedef std::vector<KeyPressInfo> KeyPressInfoVector;
   KeyPressInfoVector keypresses;
-
-  // Insert a Ctrl-A (lowercase) the first thing to
-  // select all chars when we enter a textbox
-
-  const KeyPressInfo selectAll = { XKeysymToKeycode(event.display, XK_a), ControlMask };
-
-  if ( eraseFieldBeforeAutotype && !str.empty() && dirtyHackSelectAllNext) {
-	keypresses.push_back(selectAll);
-  dirtyHackSelectAllNext = false;
-  }
 
   for (StringX::const_iterator srcIter = str.begin(); srcIter != str.end(); ++srcIter) {
 
@@ -503,15 +471,9 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
       atGlobals.error_detected = True;
       return;
     }
-	// Insert a Ctrl-A (lowercase) to select all chars when we move
-	// to another textbox after a tab character
-	if ( eraseFieldBeforeAutotype && *srcIter == _T('\t')) {
-		keypresses.push_back(selectAll);
-	}
   }
 
-  AutoTypeMethodPtr sendkeys = GetAutotypeMethod(event.display, method);
-  sendkeys->EmulateMods(emulateMods);
+  m_method->EmulateMods(emulateMods);
 
   for (KeyPressInfoVector::const_iterator itr = keypresses.begin(); itr != keypresses.end()
                               && !atGlobals.error_detected; ++itr) {
@@ -519,26 +481,50 @@ void DoSendString(const StringX& str, pws_os::AutotypeMethod method, unsigned de
     event.state = itr->state;
     event.time = CurrentTime;
 
-    (*sendkeys)(event);
+    (*m_method)(event);
     pws_os::sleep_ms(delayMS);
   }
 }
 
-} // anonymous namespace
 
 void CKeySendImpl::SendString(const StringX& str, unsigned delayMS)
 {
   atGlobals.error_detected = false;
   atGlobals.errorString[0] = 0;
 
-  DoSendString(str, m_autotypeMethod, delayMS, m_eraseBeforeTyping, m_emulateModsSeparately);
+  DoSendString(str, delayMS, m_emulateModsSeparately);
 
   if (atGlobals.error_detected)
     throw autotype_exception();
 }
 
-void CKeySendImpl::SelectAll()
+void CKeySendImpl::SelectAll(unsigned delayMS)
 {
-  m_eraseBeforeTyping = true;
-  dirtyHackSelectAllNext = true;
+  AutotypeEvent event(m_display);
+  event.keycode = XKeysymToKeycode(event.display, XK_a);
+  event.state = ControlMask;
+  event.time = CurrentTime;
+  (*m_method)(event);
+  pws_os::sleep_ms(delayMS);
+}
+
+CKeySendImpl::CKeySendImpl(pws_os::AutotypeMethod method): m_display(XOpenDisplay(NULL))
+{
+  if (m_display) {
+    m_method = GetAutotypeMethod(m_display, method);
+  }
+  else {
+    if (!atGlobals.error_detected)
+      atGlobals.error_detected = true;
+    if (!atGlobals.errorString[0])
+      strncpy(atGlobals.errorString, "Could not open X display for autotyping", NumberOf(atGlobals.errorString));
+
+    throw autotype_exception();
+  }
+}
+
+CKeySendImpl::~CKeySendImpl()
+{
+  delete m_method;
+  XCloseDisplay(m_display);
 }
