@@ -41,17 +41,20 @@
 #include "../../core/StringX.h"
 #include "./unicode2keysym.h"
 
+// We convert all chars in a string to a keycode and a set of modifier keys (like Shift)
 typedef struct _KeyPress {
   KeyCode code;
   unsigned int state;
 } KeyPressInfo;
 
+// X errors are reported via asynchronous callbacks, which we store here
 struct AutotypeGlobals
 {
   Boolean      error_detected;
   char      errorString[1024];
 } atGlobals  = { False, {0} };
 
+// We throw this exception when we detect something in atGlobals above
 class autotype_exception: public std::exception
 {
   public:
@@ -76,6 +79,7 @@ int ErrorHandler(Display *my_dpy, XErrorEvent *event)
 
 
 
+// A simple helper class
 class AutotypeEvent: public XKeyEvent {
 public:
   AutotypeEvent(Display *disp)
@@ -89,10 +93,23 @@ public:
   }
 };
 
+//////////////////////////////////////////////////////////////////////////////////////
+// AutotypeMethodBase
+//
+// Base class for the various ways to emulate keystrokes that result in a keyboard
+// event interpreted by the receiving application as the intended character.
+//
+// This class takes care of wchar_t => KeySym => (KeyCode, Modifiers) combination, and
+// generates the key-up & key-down events in the required order to generate the
+// character being auto-typed.  The derived classes only need to implement the
+// virtual GenerateKeyEvent() member that emulates a single keystroke
 
 class AutotypeMethodBase
 {
+  // We use this array to look up modifier keycodes from modifier masks
   struct ModInfo {
+    // These enums are uses as array index in SetModifiers() method below
+    // Don't change their values!!
     enum ModType {Shift /*press and hold*/, Lock, Latch, Unknown};
 
     int mask;
@@ -118,7 +135,6 @@ protected:
   bool     m_emulateMods = true;
   
 public:
-	//TODO: wrap m_display in a shared_ptr
   AutotypeMethodBase(Display *display, bool emulateMods): 
 			m_display(display), m_emulateMods(emulateMods) {
 	XSetErrorHandler(ErrorHandler);
@@ -148,6 +164,13 @@ protected:
   void SetModifiers(int masks, bool set);
 };
 
+///////////////////////////////////////////////////////////////////////
+// For each modifier, finds the keycode that generates that modifier
+// and the type (shift, latch, etc) because that dictates what kind
+// of key events are required to use that modifier.
+//
+// The KeySym is generated in the process and is needed for initialization,
+// but is not used afterwards
 void AutotypeMethodBase::InitModInfo()
 {
   XModifierKeymap* modmap = XGetModifierMapping(m_display);
@@ -155,9 +178,12 @@ void AutotypeMethodBase::InitModInfo()
     for(auto& m: m_mods) {
       if (m.key == 0) {
         if (m.sym != NoSymbol) {
+          // If we know the KeySym associated with the modifier, things are easy
           m.key = XKeysymToKeycode(m_display, m.sym);
         }
-        if (!m.key) {  //probably useless, but I'm not sure
+        if (!m.key) {
+          // Either the KeySym is unknown, or XKeysymToKeycode failed above
+          // Look up the KeyCode in the XModifierKeymap
           const auto keys = modmap->modifiermap + m.ModMapIndex*modmap->max_keypermod;
           const auto keyptr = std::find_if(keys, keys + modmap->max_keypermod, [](KeyCode k){ return k != 0; });
           m.key = (keyptr == keys + modmap->max_keypermod? 0: *keyptr);
@@ -165,22 +191,29 @@ void AutotypeMethodBase::InitModInfo()
       }
 
       if (m.sym == NoSymbol && m.key != 0) {
+        // We know the KeyCode.  Now we need the KeySym to know what kind of key events
+        // to generate with that KeyCode
         int keysyms_per_keycode = 0;
         KeySym* symlist = XGetKeyboardMapping(m_display, m.key, 1, &keysyms_per_keycode);
         if (symlist) {
-          // The keysym for a modifier must not require a modifier itself
+          // The keysym for a modifier must not require a modifier itself, so the first
+          // KeySym must not be empty
           assert(symlist[0] != NoSymbol);
           m.sym = symlist[0];
           XFree(symlist);
         }
       }
       if (m.type == ModInfo::Unknown && m.sym != NoSymbol) {
+        // The modifier "type" tells us the sequence of up or down key events
+        // to generate for that modifier
         switch (m.sym) {
+          // These are known
           case XK_Meta_L: case XK_Meta_R: case XK_Alt_L: case XK_Alt_R:
           case XK_Super_L: case XK_Super_R: case XK_Hyper_L: case XK_Hyper_R:
             m.type = ModInfo::Shift;
             break;
           default:
+          // Now we go by what it "sounds" like
             const char *symstr = XKeysymToString(m.sym);
             if (symstr) {
               const size_t s_len = strlen(symstr);
@@ -198,6 +231,9 @@ void AutotypeMethodBase::InitModInfo()
     }
     XFreeModifiermap(modmap);
   }
+  // Note that we may not have initialized every Modifier, but that may be ok
+  // because we may not actually use that modifier.  We can only tell while'
+  // autotyping
 }
 
 void AutotypeMethodBase::operator()(unsigned int keycode, unsigned int state, 
@@ -235,12 +271,26 @@ void AutotypeMethodBase::operator()(XKeyEvent &ev)
   XFlush(m_display);
 }
 
+///////////////////////////////////////////////////////////
+// Generate the modifier key events for all the modifier masks
+// (one event per mask).  For each mask, generate the keystrokes
+// (up, down, both, etc) for the keycodes corresponding to that
+// modifier based on the "type" of the modifier
 void AutotypeMethodBase::SetModifiers(int masks, bool set)
 {
+  // Shift modifiers require you to press the key for setting it, or release
+  // while unsetting
   const int shift_events[] =  { (set? KeyPress: KeyRelease), 0};
+
+  // Lock modifiers (like CAPSLOCK) require you to press and release the key
+  // for both setting & unsetting
   const int lock_events[] = {KeyPress, KeyRelease, 0};
+
+  // Latch modifiers require you to press and release the key for setting it
+  // it unsets itself as soon as any other key is pressed
   const int latch_events[] = {KeyPress, KeyRelease, KeyPress, KeyRelease, 0};
 
+  // Note that these are indexed by the ModInfo::ModType enum values
   const int* key_event_types[] = {shift_events, lock_events, latch_events, shift_events /*Unknown*/};
 
   for (auto mod: m_mods) {
@@ -258,6 +308,11 @@ void AutotypeMethodBase::SetModifiers(int masks, bool set)
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+// AutotypeMethodXTEST
+//
+// Emulates keystrokes using the XTEST extension.
+//
 class AutotypeMethodXTEST: public AutotypeMethodBase
 {
 public:
@@ -272,6 +327,11 @@ protected:
 
 };
 
+//////////////////////////////////////////////////////////////////////////
+// AutotypeMethodSendKeys
+//
+// Emulates keystrokes using the XSendEvent method
+//
 class AutotypeMethodSendKeys: public AutotypeMethodBase
 {
 public:
@@ -287,6 +347,12 @@ protected:
 };
 
 
+//////////////////////////////////////////////////////////////////////////
+// Factory method for generating the correct type of autotype method, based
+// on
+//   1. User preference
+//   2. XTEST extension availability
+//
 AutotypeMethodBase* GetAutotypeMethod(Display* disp,
 									pws_os::AutotypeMethod method_preference)
 {
@@ -302,12 +368,14 @@ AutotypeMethodBase* GetAutotypeMethod(Display* disp,
   return method_ptr;
 }
 
+// Helper method to check if an X extension is available
 bool XExtensionAvailable(Display *disp, const char* ext)
 {
   int major_opcode, first_event, first_error;
   return XQueryExtension(disp, ext, &major_opcode, &first_event, &first_error) == True;
 }
 
+// Calculates the masks (actually, shifts) used by the modifier with the KeySym "sym"
 int FindModifierMask(Display* disp, KeySym sym)
 {
   int modmask = 0;
