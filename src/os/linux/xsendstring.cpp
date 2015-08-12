@@ -133,25 +133,25 @@ class AutotypeMethodBase
 protected:
   Display *m_display;
   bool     m_emulateMods = true;
-  
+
 public:
-  AutotypeMethodBase(Display *display, bool emulateMods): 
+  AutotypeMethodBase(Display *display, bool emulateMods):
 			m_display(display), m_emulateMods(emulateMods) {
 	XSetErrorHandler(ErrorHandler);
 	atGlobals.error_detected = false;
   InitModInfo();
   }
-  
+
   // virtual, because derived classes will have clean-ups of their own
   virtual ~AutotypeMethodBase() {
 	  XSetErrorHandler(NULL);
   }
-  
-  // This function does the most heavy lifting, using the bare minimum api-specific 
+
+  // This function does the most heavy lifting, using the bare minimum api-specific
   // support from derived classes implemented by overriding GenerateKeyEvent
   void operator()(unsigned int keycode, unsigned int state, Time event_time = CurrentTime);
   void operator()(XKeyEvent &ev);
-  
+
   bool EmulatesMods() const { return m_emulateMods; }
   void EmulateMods(bool emulate) { m_emulateMods = emulate; }
 
@@ -236,7 +236,7 @@ void AutotypeMethodBase::InitModInfo()
   // autotyping
 }
 
-void AutotypeMethodBase::operator()(unsigned int keycode, unsigned int state, 
+void AutotypeMethodBase::operator()(unsigned int keycode, unsigned int state,
 							Time event_time /*= CurrentTime*/)
 {
 	XKeyEvent ev;
@@ -316,10 +316,10 @@ void AutotypeMethodBase::SetModifiers(int masks, bool set)
 class AutotypeMethodXTEST: public AutotypeMethodBase
 {
 public:
-	AutotypeMethodXTEST(Display *display, bool emulateMods): 
+	AutotypeMethodXTEST(Display *display, bool emulateMods):
 	AutotypeMethodBase(display, emulateMods){ XTestGrabControl(display, true); }
 	~AutotypeMethodXTEST() { XTestGrabControl(m_display, false); }
-	
+
 protected:
   virtual void GenerateKeyEvent(XKeyEvent *ev) {
     XTestFakeKeyEvent(ev->display, ev->keycode, ev->type == KeyPress, CurrentTime);
