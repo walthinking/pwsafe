@@ -1943,7 +1943,7 @@ int DboxMain::GetAndCheckPassword(const StringX &filename,
     // we could not create a lock file.
     switch (index) {
       case GCP_FIRST: // if first, then m_IsReadOnly is set in Open
-        pcore->SetReadOnly(bWantReadOnly || !pcore->LockFile(curFile.c_str(), locker));
+        pcore->SetReadOnly(bIsReadOnly || !pcore->LockFile(curFile.c_str(), locker));
         break;
       case GCP_NORMAL:
         if (!bIsReadOnly) // !first, lock if !bIsReadOnly
@@ -1957,9 +1957,7 @@ int DboxMain::GetAndCheckPassword(const StringX &filename,
         break;
     }
 
-    // Update to current state
-    // This is not necessarily what was wanted if we couldn't get lock for R/W
-    UpdateToolBarROStatus(pcore->IsReadOnly());
+    UpdateToolBarROStatus(bIsReadOnly);
 
     // locker won't be null IFF tried to lock and failed, in which case
     // it shows the current file locker
