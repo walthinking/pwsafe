@@ -2907,7 +2907,7 @@ void DboxMain::ChangeMode(bool promptUser)
   // From StatusBar and menu
   const bool bWasRO = IsDBReadOnly();
 
-  if (!bWasRO) { // R/W -> R-O
+  if (!bWasRO) {
     // Try to save if any changes done to database
     int rc = SaveIfChanged();
     if (rc != PWScore::SUCCESS && rc != PWScore::USER_DECLINED_SAVE)
@@ -2927,11 +2927,11 @@ void DboxMain::ChangeMode(bool promptUser)
       while (m_core.HasDBChanged()) {
         OnUndo();
       }
-    } // USER_DECLINED_SAVE
+    }
 
     // Clear the Commands & DB pre-command states
     m_core.ClearCommands();
-  } else if (promptUser) { // R-O -> R/W
+  } else if (promptUser) {
     // Taken from GetAndCheckPassword.
     // We don't want all the other processing that GetAndCheckPassword does
     CPasskeyEntry PasskeyEntryDlg(this, m_core.GetCurFile().c_str(),
