@@ -2898,22 +2898,20 @@ void DboxMain::OnProperties()
   }
 }
 
-bool DboxMain::ChangeMode(bool promptUser)
+void DboxMain::ChangeMode(bool promptUser)
 {
   // We need to prompt the user for password from r-o to r/w
   // when this is called with main window open. Arguably more
   // secure, s.t. an untrusted user can't change things.
   // When called as part of unlock, user just provided it.
   // From StatusBar and menu
-
-  // Return value says change was successful
   const bool bWasRO = IsDBReadOnly();
 
   if (!bWasRO) { // R/W -> R-O
     // Try to save if any changes done to database
     int rc = SaveIfChanged();
     if (rc != PWScore::SUCCESS && rc != PWScore::USER_DECLINED_SAVE)
-      return false;
+      return;
 
     if (rc == PWScore::USER_DECLINED_SAVE) {
        // But ask just in case
@@ -2922,7 +2920,7 @@ bool DboxMain::ChangeMode(bool promptUser)
        if (gmb.MessageBox(cs_msg, cs_title, MB_YESNO | MB_ICONQUESTION) == IDNO) {
          // Reset changed flag to stop being asked again (only if rc == PWScore::USER_DECLINED_SAVE)
          m_bUserDeclinedSave = true;
-         return false;
+         return;
        }
 
       // User said No to the save - so we must back-out all changes since last save
@@ -2941,18 +2939,16 @@ bool DboxMain::ChangeMode(bool promptUser)
 
     INT_PTR rc = PasskeyEntryDlg.DoModal();
     if (rc != IDOK)
-      return false;
-  } // R-O -> R/W
+      return;
+  }
 
-  bool rc(true);
   std::wstring locker = L"";
-  int iErrorCode(0);
+  int iErrorCode;
   bool brc = m_core.ChangeMode(locker, iErrorCode);
   if (brc) {
     UpdateStatusBar();
     UpdateToolBarROStatus(!bWasRO);
   } else {
-    rc = false;
     // Better give them the bad news!
     CGeneralMsgBox gmb;
     CString cs_msg, cs_title(MAKEINTRESOURCE(IDS_CHANGEMODE_FAILED));
@@ -3021,8 +3017,6 @@ bool DboxMain::ChangeMode(bool promptUser)
 
   // Update Minidump user streams - mode is in user stream 0
   app.SetMinidumpUserStreams(m_bOpen, !IsDBReadOnly(), us0);
-
-  return rc;
 }
 
 void DboxMain::OnChangeMode()

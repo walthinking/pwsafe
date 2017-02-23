@@ -68,7 +68,7 @@ protected:
   CSysColStatic m_ctlLogo;
   CSysColStatic m_ctlLogoText;
   CButton m_ctlOK;
-  BOOL m_btnReadOnly;
+  BOOL m_PKE_ReadOnly;
   bool m_bFileReadOnly;
   bool m_bForceReadOnly;
   bool m_bHideReadOnly;
@@ -86,7 +86,6 @@ protected:
 
   int m_tries;
   int m_status;
-  BOOL m_PKE_ReadOnly;
 
   HICON m_hIcon;
 
